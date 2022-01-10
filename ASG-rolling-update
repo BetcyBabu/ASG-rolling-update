@@ -3,8 +3,8 @@
 - name: "Creating Dynamic Inventory"
   hosts: localhost
   vars:
-    aws_access_key: ""
-    aws_secret_key: ""
+    aws_access_key: "AKIAR6JSN7F4CQQYZ4BM"
+    aws_secret_key: "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"
     region: "ap-south-1"
     ssh_port: 22
     ssh_user: "ec2-user"
@@ -37,8 +37,10 @@
 - name: "Depolying content from git"
   become: true
   hosts: ASG-rolling-update"
+  serial: 1
   vars:
     url : https://github.com/BetcyBabu/sample-website.git
+    seconds: 45
   tasks:
 
     - name: "Cloning contents from git {{ url }}"
@@ -46,6 +48,17 @@
         repo: "{{ url }}"
         dest: /var/website_files/
       register: clone_status
+
+    - name: "Disabling health check"
+      when: clone_status.changed == true
+      file:
+        path: /var/www/html/health.html
+        mode: 0000
+
+    - name: "Waiting for ELB to off-load the instance"
+      pause:
+        seconds: "{{ seconds }}"
+
     - name: "Copying files to website document root"
       when: clone_status.changed == true
       copy:
@@ -55,9 +68,21 @@
         owner: apache
         group: apache
 
+
+    - name: "Enabling health check"
+      when: clone_status.changed == true
+      file:
+        path: /var/www/html/health.html
+        mode: 0644
+
     - name: "Restarting Apache"
 
       when: clone_status.changed == true
       service:
         name: httpd
         state: restarted
+
+
+    - name: "Waiting for ELB to load the instance"
+      pause:
+        seconds: "{{ seconds }}"
