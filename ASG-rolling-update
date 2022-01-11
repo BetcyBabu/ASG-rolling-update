@@ -3,8 +3,8 @@
 - name: "Creating Dynamic Inventory"
   hosts: localhost
   vars:
-    aws_access_key: "AKIAR6JSN7F4CQQYZ4BM"
-    aws_secret_key: "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"
+    aws_access_key: ""
+    aws_secret_key: ""
     region: "ap-south-1"
     ssh_port: 22
     ssh_user: "ec2-user"
